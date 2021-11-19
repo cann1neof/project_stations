@@ -1,0 +1,14 @@
+STATIONLIST
+#0 name="Station1" aboard="3"
+#1 name="Station2" aboard="12"
+#2 name="Station3" aboard="5"
+#3 name="Station4" aboard="6"
+#4 name="Station5" aboard="7"
+#5 name="Station6" aboard="8"
+ROUTELIST
+#1 from="0" to="1" time="10"
+#1 from="1" to="2" time="11"
+#2 from="3" to="4" time="12"
+#2 from="4" to="5" time="13"
+#3 from="1" to="4" time="0"
+END
