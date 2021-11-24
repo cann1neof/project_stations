@@ -27,6 +27,8 @@ struct StationNode{
     }
 };
 
+// подграфы в графе
+
 class Router{
     private:
         int size;
@@ -34,8 +36,42 @@ class Router{
         std::vector<std::vector<int>> aims;
         std::vector<StationNode> stations;
 
+        std::vector<int> getNeighbours(int target){
+            std::vector<int> output;
+            for(int i = 0; i < size; i++){
+                if(matrix[target][i] != -1 && target != i){
+                    output.push_back(i);
+                }
+            }
+            return output;
+        }
 
-        int dijkstra(int s, int f){
+        void showRoute(int from, int to, std::vector<int> d){
+            int current = to;
+            while(current != from){
+                std::cout << stations[current].name << " <- ";
+
+                std::vector<int> neighbours = getNeighbours(current);
+
+                std::vector<std::pair<int, int>> possibleWays;
+                
+                for(int each : neighbours){
+                    possibleWays.push_back(std::make_pair(d[each], each));
+                }
+                
+                int min = 1000000;
+                
+                for(auto each : possibleWays){
+                    if(each.first < min){
+                        min = each.first;
+                        current = each.second;
+                    }
+                }                
+            }
+            std::cout << stations[from].name << "\n";
+        }
+
+        std::vector<int> dijkstra(int s, int f){
             std::vector<int> d(size, 32767);
             d[s] = 0;
             std::priority_queue<std::pair<int, int>> q;
@@ -58,7 +94,7 @@ class Router{
                 }
             }
 
-            return d[f];
+            return d;
         }
 
     public:
@@ -85,8 +121,12 @@ class Router{
         void configurateRoutes(){
             for(int i = 0; i < size; i++){
                 for(int j = 0; j < size; j++){
-                    if (i == j) continue;
-                    aims[i][j] = dijkstra(i, j);
+                    if (i != j){
+                        std::vector<int> d = dijkstra(i, j);
+                        aims[i][j] = d[j];
+
+                        showRoute(i, j, d);
+                    }
                 }
             }
             for(int i = 0; i < size; i++){
@@ -95,6 +135,15 @@ class Router{
                 }
                 std::cout << "\n";
             }
+
+            std::vector<int> d = dijkstra(0, 5);
+            std::cout << 0 << ", " << 5 << ": ";
+            
+            for(int k = 0; k < size; k++){
+                std::cout << d[k] << " ";
+            }
+            
+            std::cout << "\n";
         }
 
         friend std::ostream& operator<<(std::ostream& strm, const Router& p)
