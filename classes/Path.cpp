@@ -1,5 +1,5 @@
 #include <iostream>
-
+#include <sstream>
 class Path{
     private:
         StationNode* curr;
@@ -28,16 +28,25 @@ class Path{
             return curr;
         }
 
-        friend std::ostream& operator<<(std::ostream& strm, const Path& p){
-            Path* current = p.getNext();
-            
-            strm << p.getCurrentStation()->name << "<-";
+        std::string toString() const{
+            std::stringstream str;
+
+            Path* current = this->getNext();
+            str << this->getCurrentStation()->name << "<-";
 
             while(current->getNext() != nullptr){
-                strm << current->getCurrentStation()->name << "<-";
+                str << current->getCurrentStation()->name << "<-";
                 current = current->getNext();
             }
-            strm << current->getCurrentStation()->name << "\n";
+            str << current->getCurrentStation()->name;
+
+            std::string out;
+            str >> out;
+            return out;
+        }
+
+        friend std::ostream& operator<<(std::ostream& strm, const Path& p){
+            strm << p.toString();
             return strm;
         }
 };

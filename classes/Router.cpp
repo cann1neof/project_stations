@@ -9,7 +9,7 @@ class Router{
         std::vector<std::vector<int>> matrix;
         std::vector<std::vector<int>> aims;
         std::vector<StationNode> stations;
-        std::map<std::pair<int, int>, Path> PathCache;
+        std::map<std::pair<int, int>, Path*> PathCache;
 
         std::vector<int> getNeighbours(int target){
             std::vector<int> output;
@@ -48,6 +48,7 @@ class Router{
 
         std::vector<int> dijkstra(int s, int f){
             std::vector<int> d(size, 32767);
+            f++;
             d[s] = 0;
             std::priority_queue<std::pair<int, int>> q;
             q.push(std::make_pair(0, s));
@@ -83,8 +84,14 @@ class Router{
         }
 
         void go(int from, int to){
-            Path path = generatePath(from, to, aims[from]);
-            std::cout << path;
+            std::pair<int, int> key = std::make_pair(from, to);
+           
+            if(PathCache.count(key) == 0){
+                Path tempPath = generatePath(from, to, aims[from]);
+                PathCache[key] = &tempPath;
+            }
+            
+            std::cout << PathCache[key]->toString() << " time: " << aims[from][to]  << "\n";
         }
 
         void addStation(StationNode st){

@@ -11,5 +11,6 @@ int main() {
     CFEReader reader("./example.cfe");
     Router rt = reader.read();
     rt.go(0,5);
+    rt.go(0,5);
     return 0;
 }
