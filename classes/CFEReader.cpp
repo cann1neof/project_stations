@@ -3,6 +3,7 @@
 #include <fstream>
 #include <vector>
 
+
 class CFEReader{
     private:
         std::string path;
@@ -74,15 +75,15 @@ class CFEReader{
             while(getline(fin, str)){
                 if(flag){
                     if(i > routeAnchor && i < endAnchor){
-                        RouteNode rt = parseRouteNode(str);
-                        router.addRouteNode(rt);
+                        LaneNode rt = parseLaneNode(str);
+                        router.addLaneNode(rt);
                     } else if(i >= endAnchor){ 
                         break; 
                     }
                 } else {
                     if(i > routeAnchor && i < stationAnchor){
-                        RouteNode rt = parseRouteNode(str);
-                        router.addRouteNode(rt);
+                        LaneNode rt = parseLaneNode(str);
+                        router.addLaneNode(rt);
                     } else if(i >= stationAnchor){ 
                         break; 
                     }
@@ -114,7 +115,7 @@ class CFEReader{
             return StationNode(id, aboard, name);
         }
 
-        RouteNode parseRouteNode(std::string str){
+        LaneNode parseLaneNode(std::string str){
             std::string idSub = str.substr(str.find("#") + 1, str.find(" "));
             
             int fromStart = str.find("from=\"") + 6;
@@ -133,7 +134,7 @@ class CFEReader{
             int to = atoi(toSub.c_str());
             int time = atoi(timeSub.c_str());
 
-            return RouteNode(from, to, time);
+            return LaneNode(from, to, time);
         }
 
         void open(){
@@ -156,11 +157,12 @@ class CFEReader{
             router = Router(stationAmount);
         }
 
-        void read(){
+        Router read(){
             createStations();
             createRoutes();
-            std::cout << router << "\n";
             router.configurateRoutes();
+
+            return router;
         }
         
 };

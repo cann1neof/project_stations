@@ -3,38 +3,13 @@
 #include <cmath>
 #include <string>
 
-struct RouteNode{
-    int from;
-    int to;
-    int time;
-    
-    RouteNode(int _from, int _to, int _time){
-        from = _from;
-        to = _to;
-        time = _time;
-    }
-};
-
-struct StationNode{
-    int id;
-    int aboard;
-    std::string name;
-    
-    StationNode(int _id, int _aboard, std::string _name){
-        id = _id;
-        aboard = _aboard;
-        name = _name;
-    }
-};
-
-// подграфы в графе
-
 class Router{
     private:
         int size;
         std::vector<std::vector<int>> matrix;
         std::vector<std::vector<int>> aims;
         std::vector<StationNode> stations;
+        std::map<std::pair<int, int>, Path> PathCache;
 
         std::vector<int> getNeighbours(int target){
             std::vector<int> output;
@@ -46,15 +21,14 @@ class Router{
             return output;
         }
 
-        void showRoute(int from, int to, std::vector<int> d){
+        Path generatePath(int from, int to, std::vector<int> d){
             int current = to;
+            Path path(&stations[to]);
+
             while(current != from){
-                std::cout << stations[current].name << " <- ";
-
                 std::vector<int> neighbours = getNeighbours(current);
-
                 std::vector<std::pair<int, int>> possibleWays;
-                
+
                 for(int each : neighbours){
                     possibleWays.push_back(std::make_pair(d[each], each));
                 }
@@ -66,9 +40,10 @@ class Router{
                         min = each.first;
                         current = each.second;
                     }
-                }                
+                }
+                path.setNext(new Path(&stations[current]));
             }
-            std::cout << stations[from].name << "\n";
+            return path;
         }
 
         std::vector<int> dijkstra(int s, int f){
@@ -81,7 +56,6 @@ class Router{
                 int len = -q.top().first;
                 int v = q.top().second;
                 q.pop();
-                // std::cout << s << " " << f << " " << v << " " << d[v] << "\n";
                 if(len > d[v]) continue;
 
                 for(int i = 0; i < size; i++){
@@ -100,7 +74,6 @@ class Router{
     public:
         Router(int _size){
             size = _size;
-            // инициализируем 3d-вектор
             matrix = std::vector<std::vector<int>> (size, std::vector<int>(size, -1));
             aims = std::vector<std::vector<int>> (size, std::vector<int>(size, 0));
         }
@@ -109,41 +82,25 @@ class Router{
             size = 0;
         }
 
+        void go(int from, int to){
+            Path path = generatePath(from, to, aims[from]);
+            std::cout << path;
+        }
+
         void addStation(StationNode st){
             stations.push_back(st);
         }
 
-        void addRouteNode(RouteNode rt){
+        void addLaneNode(LaneNode rt){
             matrix[rt.from][rt.to] = rt.time;
             matrix[rt.to][rt.from] = rt.time;
         }
 
         void configurateRoutes(){
             for(int i = 0; i < size; i++){
-                for(int j = 0; j < size; j++){
-                    if (i != j){
-                        std::vector<int> d = dijkstra(i, j);
-                        aims[i][j] = d[j];
-
-                        showRoute(i, j, d);
-                    }
-                }
+                std::vector<int> d = dijkstra(i, size-1);
+                aims[i] = d;
             }
-            for(int i = 0; i < size; i++){
-                for(int j = 0; j < size; j++){
-                    std::cout << aims[i][j] << " ";
-                }
-                std::cout << "\n";
-            }
-
-            std::vector<int> d = dijkstra(0, 5);
-            std::cout << 0 << ", " << 5 << ": ";
-            
-            for(int k = 0; k < size; k++){
-                std::cout << d[k] << " ";
-            }
-            
-            std::cout << "\n";
         }
 
         friend std::ostream& operator<<(std::ostream& strm, const Router& p)
