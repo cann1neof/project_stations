@@ -50,4 +50,16 @@ class Path{
             strm << p.toString();
             return strm;
         }
+
+        std::vector<int> getStationIds(){
+            std::vector<int> output;
+            Path* current = this->getNext();
+            output.push_back(current->getCurrentStation()->id);
+
+            while(current->getNext() != nullptr){
+                output.push_back(current->getCurrentStation()->id);
+                current = current->getNext();
+            }
+            return output;
+        }
 };

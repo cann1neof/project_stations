@@ -72,6 +72,17 @@ class Router{
             return d;
         }
 
+        Path* getPath(int from, int to){
+            std::pair<int, int> key = std::make_pair(from, to);
+           
+            if(PathCache.count(key) == 0){
+                Path tempPath = generatePath(from, to, aims[from]);
+                PathCache[key] = &tempPath;
+            }
+            
+            return PathCache[key];
+        }
+
     public:
         Router(int _size){
             size = _size;
@@ -83,15 +94,8 @@ class Router{
             size = 0;
         }
 
-        void go(int from, int to){
-            std::pair<int, int> key = std::make_pair(from, to);
-           
-            if(PathCache.count(key) == 0){
-                Path tempPath = generatePath(from, to, aims[from]);
-                PathCache[key] = &tempPath;
-            }
-            
-            std::cout << PathCache[key]->toString() << " time: " << aims[from][to]  << "\n";
+        Path* go(int from, int to){
+            return getPath(from, to);
         }
 
         void addStation(StationNode st){
@@ -135,6 +139,10 @@ class Router{
                 return matrix[i][j]; 
             }
             return 0;
+        }
+
+        std::vector<std::vector<int>> get_matrix(){
+            return matrix;
         }
 
 };

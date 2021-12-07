@@ -1,14 +1,16 @@
 #include <string>
 
 struct LaneNode{
+    int laneId;
     int from;
     int to;
     int time;
     
-    LaneNode(int _from, int _to, int _time){
+    LaneNode(int _from, int _to, int _time, int _laneId){
         from = _from;
         to = _to;
         time = _time;
+        laneId = _laneId;
     }
 };
 
