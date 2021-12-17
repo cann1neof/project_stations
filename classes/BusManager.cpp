@@ -6,210 +6,195 @@
 #include <stdlib.h>
 #include <iostream>
 
-class Bus{
-    private: 
-        int vec;
-        int distance;
-        int aboard;
-        int station;
-        int laneId;
-        int stationIndex;
+#include "./Classes.h"
 
-        bool onStation;
+// Bus methods
 
-    public:
-        Bus(int _station, int _stationIndex, int _vec, int _laneId, int _distance, int _aboard){
-            station = _station;
-            stationIndex = _stationIndex;
-            vec = _vec;
-            laneId = _laneId;
-            distance = _distance;
-            aboard = _aboard;
-            onStation = true;
-        }
+Bus::Bus(int _station, int _stationIndex, int _vec, int _laneId, int _distance, int _aboard){
+    station = _station;
+    stationIndex = _stationIndex;
+    vec = _vec;
+    laneId = _laneId;
+    distance = _distance;
+    aboard = _aboard;
+    onStation = true;
+}
 
-        int get_laneId() const { return laneId; }
-
-        int get_station() const { return station; }
-        
-        int get_stationIndex() const { return stationIndex; }
-
-        bool get_onStation() const { return onStation; }
-
-        int get_vec() const { return vec; }
-        
-        int get_aboard() const { return aboard; }
-        
-        int get_distance() const { return distance; }
-
-        int tick(){
-            if(onStation){
-                std::cout << "aboard: " << aboard << "\n";
-                aboard--;
-                if(aboard == 0){
-                    onStation = false;
-                    return -1;
-                }
-            } else {
-                std::cout << "distance: " << distance << "\n";
-                distance--;
-                if(distance == 0){
-                    onStation = true;
-                    return 0;
-                }
-            }
-        }
-
-        void setNewStation(int _station, int _distance, int _aboard){
-            station = _station;
-            distance = _distance;
-            aboard = _aboard;
-        }
-
-        void switchvec(){
-            vec *= -1;
-        }
-
-        friend std::ostream& operator<<(std::ostream& strm, const Bus *b){
-            strm << b->get_laneId();
-            strm << " station: ";
-            strm << b->get_station();
-            strm << " vec: ";
-            strm << b->get_vec();
-            strm << " dist: ";
-            strm << b->get_distance();
-            strm << " aboard: ";
-            strm << b->get_aboard();
-            strm << "\n";
-
-            return strm;
-        }
-
-};
-
-class BusManager{
-    private:
-        int size;
-        int laneAmount;
-        std::vector<Bus*> depot;
-        std::map<int, std::vector<int>> lanes;
-        std::vector<std::vector<int>> matrix;
-        std::vector<StationNode> stations;
-
-        void setNextStation(Bus* b){
-            int lane = b->get_laneId();
-            int curr = b->get_stationIndex();
-            int max = lanes[lane].size();
-            int vec = b->get_vec();
-
-            if((curr == 0 && vec == -1 )|| (curr == max - 1 && vec == 1)){
-                b->switchvec();
-                vec *= -1;
-            }
-            int nextStationId = lanes[lane][curr + vec];
-
-            b->setNewStation(curr+vec, matrix[curr][curr+vec], stations[nextStationId].aboard);
-        }
-
-        int getStationLaneId(int id){
-            for(int i = 0; i < laneAmount; i++){
-                std::vector<int>::iterator it = std::find(lanes[i].begin(), lanes[i].end(), id);
-                if(it != lanes[i].end()){
-                    return i;
-                }
-            }
-            std::cout << "FATAL ERROR: NO LANE\n";
+int Bus::tick(){
+    if(onStation){
+        std::cout << "aboard: " << aboard << " " << station << " " << vec <<"\n";
+        aboard--;
+        if(aboard == 0){
+            onStation = false;
             return -1;
         }
+    } else {
+        std::cout << "distance: " << distance << " " << station << " " << vec  << "\n";
+        distance--;
+        if(distance == 0){
+            onStation = true;
+            return 0;
+        }
+    }
+    return 0;
+}
+
+void Bus::setNewStation(int _station, int _stationIndex, int _distance, int _aboard){
+    prevStation = station;
+    station = _station;
+    distance = _distance;
+    aboard = _aboard;
+    stationIndex = _stationIndex;
+}
+
+void Bus::switchvec(){
+    vec *= -1;
+}
+
+// BusManager methods
+
+void BusManager::setNextStation(Bus* b){
+    int lane = b->get_laneId();
+    int curr = b->get_stationIndex();
+    int max = storage->getLaneSize(lane);
+    int vec = b->get_vec();
+
+    if((curr == 0 && vec == -1 )|| (curr == max - 1 && vec == 1)){
+        b->switchvec();
+        vec *= -1;
+    }
+    int nextStationId = storage->getStationIdFromLane(lane, curr + vec);
+    b->setNewStation(nextStationId, curr + vec,
+                    storage->getMatrixElement(curr, curr + vec), 
+                    storage->getStation(nextStationId)->aboard
+                    );
+}
         
-        void addBus(int laneId, int i){
-            srand(i + laneId + time(NULL));
-            int randStation = rand() % lanes[laneId].size();
-            int randVec = rand() % 100;
-            std::cout << randStation << " " << randVec << "\n";
-            if(randVec % 2 == 0){
-                randVec = 1;
-            }else{
-                randVec = -1;
-            }
+void BusManager::addBus(int laneId, int i){
+    srand(i + laneId + time(NULL));
+    int randStation = rand() % storage->getLaneSize(laneId);
+    int randVec = rand() % 100;
+    
+    if(randVec % 2 == 0){
+        randVec = 1;
+    }else{
+        randVec = -1;
+    }
 
-            if(randStation == 0){
-                randVec = 1;
-            }
-            if(randStation == (int)lanes[laneId].size() - 1){
-                randVec = -1;
-            }
+    if(randStation == 0){
+        randVec = 1;
+    }
+    if(randStation == (int)storage->getLaneSize(laneId) - 1){
+        randVec = -1;
+    }
 
-            int station = lanes[laneId][randStation];
+    int station = storage->getStationIdFromLane(laneId, randStation);
+    Bus *b = new Bus(station, randStation, randVec, laneId, 
+                    storage->getMatrixElement(station, station + randVec), 
+                    storage->getStation(station)->aboard
+                    );
 
-            std::cout << "\n";
-            Bus *b = new Bus(station, randStation, randVec, laneId, matrix[station][station + randVec], stations[station].aboard);
-            depot.push_back(b);
-        }
-
-    public:
-        BusManager(int _size){
-            size = _size;
-            laneAmount = 0;
-        }
+    storage->addBus(b);
+}
         
-        BusManager(){
-            size = 0;
-            laneAmount = 0;
-        }       
+std::vector<int> BusManager::getLanesFromPath(Path* p){
+    std::vector<int> output;
+    for(auto stationId: p->getStationIds()){
+        int laneId = storage->getLaneIdFromStation(stationId);
 
-        void addLaneNode(LaneNode rt){
-            if(lanes.count(rt.laneId) == 0){
-                laneAmount++;
-                lanes[rt.laneId].push_back(rt.from);
-                lanes[rt.laneId].push_back(rt.to);
-            } else {
-                lanes[rt.laneId].push_back(rt.to);
+        std::vector<int>::iterator it = std::find(output.begin(), output.end(), laneId);
+        
+        if(it == output.end()){
+            output.push_back(laneId);
+        }
+
+    }
+    return output;
+}
+
+std::vector<std::pair<int, int>> BusManager::getTransfers(Path* p){
+    std::vector<std::pair<int, int>> output;
+    std::vector<int> ids = p->getStationIds();
+    for(int i = 1; i < ids.size(); i++){
+        if(ids[i] != ids[i-1]){
+            std::pair<int, int> tempopair = std::make_pair(ids[i], ids[i-1]);
+
+            std::vector<std::pair<int, int>>::iterator it = std::find(output.begin(), output.end(), tempopair);
+            
+            if(it == output.end()){
+                output.push_back(tempopair);
             }
         }
+    }
 
-        void setMatrix(std::vector<std::vector<int>> _matrix){
-            matrix = _matrix;
+    return output;
+}
+
+void BusManager::addNBus(int laneId, int amount){
+    for(int i = 0; i < amount; i++){
+        addBus(laneId, i+1);
+    }
+}
+
+void BusManager::addNBus(std::pair<int, int> parsedBus){
+    for(int i = 0; i < parsedBus.first; i++){
+        addBus(parsedBus.second, i+1);
+    }
+}
+
+void BusManager::tick(){
+    for(int i = 0; i < storage->getDepotSize(); i++){
+        std::cout << i << ": ";
+        int out = storage->getBus(i)->tick();
+        if(out == -1){
+            setNextStation(storage->getBus(i));
         }
+    }
+}
 
-        void addStation(StationNode st){
-            stations.push_back(st);
+void BusManager::go(int from, int to){
+    
+}
+
+Bus* BusManager::findClosest(int from, bool verbose=false){
+    std::vector<int> distances;
+    int laneId = storage->getLaneIdFromStation(from);
+    for(int i = 0; i < storage->getDepotSize(); i++){
+        Bus* b = storage->getBus(i);
+        if(b->get_laneId() == laneId){
+            distances.push_back(getDistanceToStation(b, from));
         }
+    }
 
-        void addNBus(int laneId, int amount){
-            for(int i = 0; i < amount; i++){
-                addBus(laneId, i+1);
-            }
+    if(verbose){
+        for(auto each: distances){
+            std::cout << each << " ";
         }
+        std::cout << std::endl;
+    }
+    
+    std::vector<int>::iterator minDistanceIt = std::min_element(distances.begin(), distances.end());
+    int minDistance = std::distance(distances.begin(), minDistanceIt);
+    return storage->getBus(minDistance);
+}
 
-        void addNBus(std::pair<int, int> parsedBus){
-            for(int i = 0; i < parsedBus.first; i++){
-                addBus(parsedBus.second, i+1);
-            }
-        }
+int BusManager::getDistanceToStation(Bus* b, int target){
+    int station = b->get_station();
+    int totalTime = storage->getAims()[station][target];
+    int delta = 0;
+    if(b->get_onStation()){
+        delta = b->get_aboard() - storage->getStation(station)->aboard;
+    } else {
+        delta = b->get_distance();   
+    }
+    totalTime += delta;
+    return totalTime;
+}
 
-        std::vector<int> getLanesFromPath(Path* p){
-            std::vector<int> output;
-            for(auto stationId: p->getStationIds()){
-                int laneId = getStationLaneId(stationId);
+int BusManager::getDepotSize(){
+    return storage->getDepotSize();
+}
 
-                std::vector<int>::iterator it = std::find(output.begin(), output.end(), laneId);
-                
-                if(it == output.end()){
-                    output.push_back(laneId);
-                }
-
-            }
-            return output;
-        }
-
-        void tick(){
-            for(int i = 0; i < depot.size(); i++){
-                std::cout << i << ": ";
-                int out = depot[i]->tick();
-                if(out == -1){
-                    setNextStation(depot[i]);
-                }
-            }
-        }
-};
+Bus* BusManager::getBus(int i){
+    return storage->getBus(i);
+}

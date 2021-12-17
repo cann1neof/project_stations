@@ -1,65 +1,74 @@
 #include <iostream>
 #include <sstream>
 
-class Path{
-    private:
-        StationNode* curr;
-        Path* next;
-    
-    public:
-        Path(StationNode* _curr){
-            curr = _curr;
-            next = nullptr;
-        }
+void Path::setNext(Path* _next){
+    if(next == nullptr){
+        next = _next;
+    }
+    else{
+        next->setNext(_next);
+    }
+}
+ 
+Path* Path::getNext() const{
+    return this->next;
+}
+ 
+std::string Path::toString() const{
+    std::stringstream str;
+    Path* current = nullptr;
+    Path* nxt = this->getNext();
 
-        void setNext(Path* _next){
-            if(next == nullptr){
-                next = _next;
-            }
-            else{
-                next->setNext(_next);
-            }
-        }
+    if(nxt != nullptr){
+        current = nxt;
+    }
+ 
+    str << this->curr->name << "<-";
 
-        Path* getNext() const{
-            return next;
-        }
+    while(current->getNext() != 0x0 && current->getNext() != nullptr){
+        str << current->getCurrentStation()->name << "<-";
+        current = current->getNext();
+    }
+    str << current->getCurrentStation()->name;
+ 
+    std::string out;
+    str >> out;
+    return out;
+}
 
-        StationNode* getCurrentStation() const{
-            return curr;
-        }
+std::vector<int> Path::getStationIds(){
+    std::vector<int> output;
+    Path* current = this->getNext();
+    output.push_back(current->getCurrentStation()->id);
 
-        std::string toString() const{
-            std::stringstream str;
+    while(current->getNext() != nullptr){
+        output.push_back(current->getCurrentStation()->id);
+        current = current->getNext();
+    }
+    return output;
+}
 
-            Path* current = this->getNext();
-            str << this->getCurrentStation()->name << "<-";
+int Path::getTotalAboardTime(){
+    int output;
+    Path* current = this->getNext();
+    // output.push_back(current->getCurrentStation()->id);
+    output += current->getCurrentStation()->aboard;
 
-            while(current->getNext() != nullptr){
-                str << current->getCurrentStation()->name << "<-";
-                current = current->getNext();
-            }
-            str << current->getCurrentStation()->name;
+    while(current->getNext() != nullptr){
+        output += current->getCurrentStation()->aboard;
+        current = current->getNext();
+    }
+    return output;
+}
 
-            std::string out;
-            str >> out;
-            return out;
-        }
+int Path::getPathLength(){
+    int output = 0;
+    Path* current = this->getNext();
+    output++;
 
-        friend std::ostream& operator<<(std::ostream& strm, const Path& p){
-            strm << p.toString();
-            return strm;
-        }
-
-        std::vector<int> getStationIds(){
-            std::vector<int> output;
-            Path* current = this->getNext();
-            output.push_back(current->getCurrentStation()->id);
-
-            while(current->getNext() != nullptr){
-                output.push_back(current->getCurrentStation()->id);
-                current = current->getNext();
-            }
-            return output;
-        }
-};
+    while(current->getNext() != nullptr){
+        output++;
+        current = current->getNext();
+    }
+    return output;
+}
