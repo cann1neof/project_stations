@@ -152,11 +152,7 @@ void BusManager::tick(){
     }
 }
 
-void BusManager::go(int from, int to){
-    
-}
-
-Bus* BusManager::findClosest(int from, bool verbose=false){
+std::pair<int, Bus*> BusManager::findClosest(int from, bool verbose=false){
     std::vector<int> distances;
     int laneId = storage->getLaneIdFromStation(from);
     for(int i = 0; i < storage->getDepotSize(); i++){
@@ -165,17 +161,38 @@ Bus* BusManager::findClosest(int from, bool verbose=false){
             distances.push_back(getDistanceToStation(b, from));
         }
     }
-
-    if(verbose){
-        for(auto each: distances){
-            std::cout << each << " ";
-        }
-        std::cout << std::endl;
-    }
     
     std::vector<int>::iterator minDistanceIt = std::min_element(distances.begin(), distances.end());
     int minDistance = std::distance(distances.begin(), minDistanceIt);
-    return storage->getBus(minDistance);
+
+    if(verbose){
+        std::cout << distances[minDistance] << "\n";
+    }
+    
+    return std::make_pair(distances[minDistance], storage->getBus(minDistance));
+}
+
+std::pair<int, Bus*> BusManager::findClosest(StationNode* from, bool verbose=false){
+    return findClosest(from->id, verbose);
+}
+
+int BusManager::getRouteTime(Path* part){
+    int totalTime = 0;
+    StationNode* start = part->getStartNode();
+    StationNode* end = part->getCurrentStation();
+    std::pair<int, Bus*> closest = findClosest(start);
+    totalTime += closest.first;
+    totalTime += getDistanceToStation(closest.second, end);
+    return totalTime;
+}
+
+int BusManager::getNRouteTime(std::vector<Path*> totalPath){
+    int totalTime = 0;
+    for(auto each: totalPath){
+        // TODO: isolate bus state
+        totalTime += getRouteTime(each);
+    }
+    return totalTime;
 }
 
 int BusManager::getDistanceToStation(Bus* b, int target){
@@ -189,6 +206,10 @@ int BusManager::getDistanceToStation(Bus* b, int target){
     }
     totalTime += delta;
     return totalTime;
+}
+
+int BusManager::getDistanceToStation(Bus* b, StationNode* target){
+    getDistanceToStation(b, target->id);
 }
 
 int BusManager::getDepotSize(){

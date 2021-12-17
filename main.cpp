@@ -27,13 +27,7 @@ int main() {
             int from, to;
             cout << "Откуда и куда Вы хотите поехать? ";
             cin >> from >> to;
-            for(int i = 0; i < instances.busManager->getDepotSize(); i++){
-                Bus* lel = instances.busManager->getBus(i);
-                cout << lel;
-            }
-            // Path* p = instances.routeManager->go(from, to);
-            instances.go(from, to);
-            
+            instances.go(from, to);   
         }
         else{
             system("clear");

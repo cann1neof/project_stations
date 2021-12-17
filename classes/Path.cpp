@@ -72,3 +72,12 @@ int Path::getPathLength(){
     }
     return output;
 }
+
+StationNode* Path::getStartNode(){
+    Path* current = this;
+    while(current->getNext() != nullptr){
+        current = current->getNext();
+    }
+
+    return current->getCurrentStation();
+}

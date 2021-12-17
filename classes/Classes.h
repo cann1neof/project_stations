@@ -108,6 +108,7 @@ class Path{
         std::vector<int> getStationIds();
         int getTotalAboardTime();
         int getPathLength();
+        StationNode* getStartNode();
 };
 
 class Storage{
@@ -157,6 +158,7 @@ class BusManager{
         void addBus(int laneId, int i);
         
         int getDistanceToStation(Bus* b, int target);
+        int getDistanceToStation(Bus* b, StationNode* target);
         Bus* getClosestBus(int from);
 
     public:        
@@ -170,10 +172,13 @@ class BusManager{
         void addNBus(std::pair<int, int> parsedBus);
         void tick();
         void go(int from, int to);
-        Bus* findClosest(int i, bool verbose);
+        std::pair<int, Bus*> findClosest(int from, bool verbose);
+        std::pair<int, Bus*> findClosest(StationNode* from, bool verbose);
 
         int getDepotSize();
         Bus* getBus(int i);
+        int getRouteTime(Path* part);
+        int getNRouteTime(std::vector<Path*> totalPath);
 };
 
 class RouteManager{
