@@ -10,7 +10,7 @@ void ManagerInstances::go(int from, int to){
         totalPath.push_back(routeManager->generateSubPath(to, each, true));
     }
 
-    std::cout << globalPath << "\n";
+    std::cout << "Самый быстрый маршрут:\n"<<globalPath << "\n";
 
     int totalTime;
 
@@ -20,5 +20,5 @@ void ManagerInstances::go(int from, int to){
         totalTime = busManager->getRouteTime(globalPath);
     }
 
-    std::cout << totalTime << "\n";
+    std::cout << "Время в пути: " << totalTime << "\n";
 }

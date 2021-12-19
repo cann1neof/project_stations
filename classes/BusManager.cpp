@@ -20,16 +20,27 @@ Bus::Bus(int _station, int _stationIndex, int _vec, int _laneId, int _distance, 
     onStation = true;
 }
 
-int Bus::tick(){
+Bus::Bus(BusState* state){
+    vec = state->vec;
+    distance = state->distance;
+    aboard = state->aboard;
+    station = state->station;
+    laneId = state->laneId;
+    stationIndex = state->stationIndex;
+    prevStation = state->prevStation;
+    onStation = state->onStation;
+}
+
+int Bus::tick(bool verbose=true){
     if(onStation){
-        std::cout << "aboard: " << aboard << " " << station << " " << vec <<"\n";
+        if(verbose) std::cout << "aboard: " << aboard << " " << station << " " << vec <<"\n";
         aboard--;
         if(aboard == 0){
             onStation = false;
             return -1;
         }
     } else {
-        std::cout << "distance: " << distance << " " << station << " " << vec  << "\n";
+        if(verbose) std::cout << "distance: " << distance << " " << station << " " << vec  << "\n";
         distance--;
         if(distance == 0){
             onStation = true;
@@ -49,6 +60,10 @@ void Bus::setNewStation(int _station, int _stationIndex, int _distance, int _abo
 
 void Bus::switchvec(){
     vec *= -1;
+}
+
+BusState* Bus::get_state(){
+    return new BusState(vec, distance, aboard, station, laneId, stationIndex, prevStation, onStation);
 }
 
 // BusManager methods
@@ -152,11 +167,11 @@ void BusManager::tick(){
     }
 }
 
-std::pair<int, Bus*> BusManager::findClosest(int from, bool verbose=false){
+std::pair<int, Bus*> BusManager::findClosest(int from, int stateTick, bool verbose=false){
     std::vector<int> distances;
     int laneId = storage->getLaneIdFromStation(from);
     for(int i = 0; i < storage->getDepotSize(); i++){
-        Bus* b = storage->getBus(i);
+        Bus* b = storage->getBusState(i, stateTick);
         if(b->get_laneId() == laneId){
             distances.push_back(getDistanceToStation(b, from));
         }
@@ -172,15 +187,15 @@ std::pair<int, Bus*> BusManager::findClosest(int from, bool verbose=false){
     return std::make_pair(distances[minDistance], storage->getBus(minDistance));
 }
 
-std::pair<int, Bus*> BusManager::findClosest(StationNode* from, bool verbose=false){
-    return findClosest(from->id, verbose);
+std::pair<int, Bus*> BusManager::findClosest(StationNode* from, int stateTick, bool verbose=false){
+    return findClosest(from->id, stateTick, verbose);
 }
 
-int BusManager::getRouteTime(Path* part){
+int BusManager::getRouteTime(Path* part, int stateTick=0){
     int totalTime = 0;
     StationNode* start = part->getStartNode();
     StationNode* end = part->getCurrentStation();
-    std::pair<int, Bus*> closest = findClosest(start);
+    std::pair<int, Bus*> closest = findClosest(start, stateTick);
     totalTime += closest.first;
     totalTime += getDistanceToStation(closest.second, end);
     return totalTime;
@@ -189,8 +204,7 @@ int BusManager::getRouteTime(Path* part){
 int BusManager::getNRouteTime(std::vector<Path*> totalPath){
     int totalTime = 0;
     for(auto each: totalPath){
-        // TODO: isolate bus state
-        totalTime += getRouteTime(each);
+        totalTime += getRouteTime(each, totalTime);
     }
     return totalTime;
 }
@@ -209,7 +223,7 @@ int BusManager::getDistanceToStation(Bus* b, int target){
 }
 
 int BusManager::getDistanceToStation(Bus* b, StationNode* target){
-    getDistanceToStation(b, target->id);
+    return getDistanceToStation(b, target->id);
 }
 
 int BusManager::getDepotSize(){

@@ -24,6 +24,7 @@ int main() {
     while(1){
         cin >> str;
         if(str == "y"){
+            system("clear");
             int from, to;
             cout << "Откуда и куда Вы хотите поехать? ";
             cin >> from >> to;

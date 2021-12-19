@@ -32,6 +32,28 @@ struct StationNode{
     }
 };
 
+struct BusState{
+    int vec;
+    int distance;
+    int aboard;
+    int station;
+    int laneId;
+    int stationIndex;
+    int prevStation;
+    bool onStation;
+
+    BusState(int _vec, int _distance, int _aboard, int _station, int _laneId, int _stationIndex, int _prevStation, bool _onStation){
+        vec = _vec;
+        distance = _distance;
+        aboard = _aboard;
+        station = _station;
+        laneId = _laneId;
+        stationIndex = _stationIndex;
+        prevStation = _prevStation;
+        onStation = _onStation;
+    }
+};
+
 class Bus{
     private: 
         int vec;
@@ -45,6 +67,7 @@ class Bus{
 
     public:
         Bus(int _station, int _stationIndex, int _vec, int _laneId, int _distance, int _aboard);
+        Bus(BusState* state);
         int get_laneId() const { return laneId; }
         int get_station() const { return station; }
         int get_stationIndex() const { return stationIndex; }
@@ -53,8 +76,8 @@ class Bus{
         int get_aboard() const { return aboard; }
         int get_distance() const { return distance; }
         int get_prevStation() const { return prevStation; }
-        
-        int tick();
+        BusState* get_state();
+        int tick(bool verbose);
         void setNewStation(int _station, int _stationIndex, int _distance, int _aboard);
         void switchvec();
         
@@ -123,6 +146,8 @@ class Storage{
 
         int laneAmount;
         int size;
+
+        void setNextStation(Bus* b);
     public:
         // setters
         void setSize(int _size);
@@ -148,6 +173,7 @@ class Storage{
         int getLaneIdFromStation(int stationId);
         std::vector<int> getLane(int laneId);
         std::vector<std::pair<int, int>> getTransferList();
+        Bus* getBusState(int i, int stateTick);
 };
 
 class BusManager{
@@ -172,12 +198,12 @@ class BusManager{
         void addNBus(std::pair<int, int> parsedBus);
         void tick();
         void go(int from, int to);
-        std::pair<int, Bus*> findClosest(int from, bool verbose);
-        std::pair<int, Bus*> findClosest(StationNode* from, bool verbose);
+        std::pair<int, Bus*> findClosest(int from, int stateTick, bool verbose);
+        std::pair<int, Bus*> findClosest(StationNode* from, int stateTick, bool verbose);
 
         int getDepotSize();
         Bus* getBus(int i);
-        int getRouteTime(Path* part);
+        int getRouteTime(Path* part, int stateTick);
         int getNRouteTime(std::vector<Path*> totalPath);
 };
 

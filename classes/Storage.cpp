@@ -96,3 +96,37 @@ std::vector<int> Storage::getLane(int laneId){
 std::vector<std::pair<int, int>> Storage::getTransferList(){
     return transferList;
 }
+
+void Storage::setNextStation(Bus* b){
+    int lane = b->get_laneId();
+    int curr = b->get_stationIndex();
+    int max = getLaneSize(lane);
+    int vec = b->get_vec();
+
+    if((curr == 0 && vec == -1 )|| (curr == max - 1 && vec == 1)){
+        b->switchvec();
+        vec *= -1;
+    }
+    int nextStationId = getStationIdFromLane(lane, curr + vec);
+    b->setNewStation(nextStationId, curr + vec,
+                    getMatrixElement(curr, curr + vec), 
+                    getStation(nextStationId)->aboard
+                    );
+}
+
+Bus* Storage::getBusState(int i, int stateTick){
+    if(stateTick > 0){
+        Bus* targetBus = getBus(i);
+        BusState* initialState = targetBus->get_state();
+        Bus* currentBus = new Bus(initialState);
+
+        for(int i = 0; i < stateTick; i++){
+            int out = currentBus->tick(false);
+            if(out == -1){
+                setNextStation(currentBus);
+            }
+        }
+        return currentBus;
+    }
+    return getBus(i);
+}

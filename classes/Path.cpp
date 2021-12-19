@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 void Path::setNext(Path* _next){
     if(next == nullptr){
@@ -31,8 +32,33 @@ std::string Path::toString() const{
     }
     str << current->getCurrentStation()->name;
  
+    std::string _out;
+    std::vector<std::string> reverseVector;
     std::string out;
+    str >> _out;
+    int lastIt = 0;
+
+    for(int i = 1; i < _out.length(); i++){
+        if(_out[i] == '-' && _out[i-1] == '<'){
+            reverseVector.push_back(_out.substr(lastIt, i-lastIt-1));
+            lastIt = i+1;
+        }
+        if(i == _out.length() - 1){
+            reverseVector.push_back(_out.substr(lastIt, i-lastIt+1));
+        }
+    }
+
+    str.clear();
+
+    for(int i = reverseVector.size()-1; i >= 0; i--){
+        str << reverseVector[i];
+        if(i != 0){
+            str << "->";
+        }
+    }
+
     str >> out;
+    
     return out;
 }
 
